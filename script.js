@@ -393,16 +393,55 @@ function lookupDTImpairment(angle, jointType, motionType) {
     return dtImpairment;
 }
 
+function combineImpairments(impairments) {
+    let combined = impairments.reduce((acc, imp) => acc + (imp / 100) * (1 - acc), 0);
+    return Math.round(combined * 100); // Convert to percentage and round to nearest whole number
+}
+
+function addImpairments(impairments) {
+    return impairments.reduce((acc, imp) => acc + imp, 0);
+}
+
 document.getElementById('calculatorForm').addEventListener('submit', function(event) {
     event.preventDefault();
-    const angle = parseFloat(document.getElementById('angle').value);
-    const jointType = document.getElementById('jointType').value;
-    const motionType = document.getElementById('motionType').value;
+    const dipFlexion = document.getElementById('DIPFlexion').value;
+    const dipExtension = document.getElementById('DIPExtension').value;
+    const dipAnkylosis = document.getElementById('DIPAnkylosis').value;
+    const pipFlexion = document.getElementById('PIPFlexion').value;
+    const pipExtension = document.getElementById('PIPExtension').value;
+    const pipAnkylosis = document.getElementById('PIPAnkylosis').value;
+    const mpFlexion = document.getElementById('MPFlexion').value;
+    const mpExtension = document.getElementById('MPExtension').value;
+    const mpAnkylosis = document.getElementById('MPAnkylosis').value;
 
-    try {
-        const result = lookupDTImpairment(angle, jointType, motionType);
-        document.getElementById('result').textContent = `The DT impairment for ${jointType} joint at ${angle} degrees ${motionType} is ${result}%`;
-    } catch (error) {
-        document.getElementById('result').textContent = error.message;
-    }
+    const dipImpairments = [
+        dipFlexion && lookupDTImpairment(parseFloat(dipFlexion), 'DIP', 'flexion'),
+        dipExtension && lookupDTImpairment(parseFloat(dipExtension), 'DIP', 'extension'),
+        dipAnkylosis && lookupDTImpairment(parseFloat(dipAnkylosis), 'DIP', 'ankylosis')
+    ].filter(imp => imp);
+
+    const pipImpairments = [
+        pipFlexion && lookupDTImpairment(parseFloat(pipFlexion), 'PIP', 'flexion'),
+        pipExtension && lookupDTImpairment(parseFloat(pipExtension), 'PIP', 'extension'),
+        pipAnkylosis && lookupDTImpairment(parseFloat(pipAnkylosis), 'PIP', 'ankylosis')
+    ].filter(imp => imp);
+
+    const mpImpairments = [
+        mpFlexion && lookupDTImpairment(parseFloat(mpFlexion), 'MP', 'flexion'),
+        mpExtension && lookupDTImpairment(parseFloat(mpExtension), 'MP', 'extension'),
+        mpAnkylosis && lookupDTImpairment(parseFloat(mpAnkylosis), 'MP', 'ankylosis')
+    ].filter(imp => imp);
+
+    const dipImpairment = addImpairments(dipImpairments);
+    const pipImpairment = addImpairments(pipImpairments);
+    const mpImpairment = addImpairments(mpImpairments);
+
+    const totalImpairment = combineImpairments([dipImpairment, pipImpairment, mpImpairment]);
+
+    document.getElementById('result').textContent = `
+        DIP Impairment: ${dipImpairment}% 
+        PIP Impairment: ${pipImpairment}% 
+        MP Impairment: ${mpImpairment}% 
+        Combined Impairment: ${totalImpairment}%
+    `;
 });
